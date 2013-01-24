@@ -10,6 +10,7 @@ class Main {
 	private static $init = array();
 	private static $framework = array();
 	private static $recursive = false;
+	private static $gzip = false;
 
 	public static function initFramework($callable = NULL) {
 		if($callable === NULL) {
@@ -127,10 +128,12 @@ class Main {
 		if (! function_exists('gzencode')) return false;
 		if ( strpos($encoding, 'x-gzip') !== false) {
 			header('Content-Encoding: x-gzip');
+			self::$gzip = true;
 			return true;
 		}
 		if( strpos($encoding, 'gzip') !== false) {
 			header('Content-Encoding: gzip');
+			self::$gzip = true;
 			return true;
 		}
 		return false;
@@ -195,15 +198,32 @@ class Main {
 			header('Content-Length: 0');
 			return ;
 		}
+		$conf = Config::getInstance();
+		$cache = NULL;
+		try {
+			$cache = $conf('URI.GZip.Cache');
+			$cachedPath = substr($cache, 0, -1) . str_replace(WEB_ROOT . '/static', '', $path) . '.gz';
+			if(is_file($cachedPath) && is_readable($cachedPath)) {
+				$cctime = filectime($cachedPath);
+				if($cctime < $mtime) throw new Exception();
+				if(! self::startgzip()) throw new Exception();
+				header('Last-Modified: ' . date('r', $mtime));
+				header('Content-Type: ' . ( array_key_exists($ext, $mime_types) ? $mime_types[$ext] : 'application/octet-stream'));
+				header('Content-Length: ' . filesize($cachedPath));
+				echo file_get_contents($cachedPath);
+				return ;
+			}
+		} catch(ConfigException $e) {
+		} catch(Exception $e) {
+		}
+		header('Last-Modified: ' . date('r', $mtime));
 		if(! ($f = fopen($path, 'rb'))) {
 			header('HTTP/1.1 403 Forbidden');
 			echo 'Permission Denied!';
 			return ;
 		}
-		header('Last-Modified: ' . date('r', $mtime));
 		$exts = array();
 		$size = 0;
-		$conf = Config::getInstance();
 		try{
 			$exts = $conf('URI.GZip.Extensions');
 		} catch (ConfigException $e) {
@@ -216,7 +236,7 @@ class Main {
 		flock($f, LOCK_SH);
 		header('Content-Type: ' . ( array_key_exists($ext, $mime_types) ? $mime_types[$ext] : 'application/octet-stream'));
 		$fsize = filesize($path);
-		if ($willGZip && self::startgzip() && $fsize >= $size)
+		if ($willGZip && $fsize >= $size && self::startgzip() )
 			$data = gzencode(fread($f, $fsize));
 		else
 			$data = fread($f, $fsize);
@@ -224,6 +244,14 @@ class Main {
 		echo $data;
 		flock($f, LOCK_UN);
 		fclose($f);
+		if(function_exists('fastcgi_finish_request')) fastcgi_finish_request();
+		if($cache !== NULL && self::$gzip) { // Save cached file.
+			$dat = pathinfo($cachedPath);
+			if(mkdir($dat['dirname'], 0777, true)); {
+				file_put_contents($cachedPath, $data);
+				touch($cachedPath, $mtime);
+			}
+		}
 		return ;
 	}
 }

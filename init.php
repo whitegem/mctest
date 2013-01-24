@@ -5,7 +5,7 @@ if(! defined('IN_WGSL')) {
 	die();
 }
 
-//error_reporting(0);
+error_reporting(0);
 
 
 $request = array(
