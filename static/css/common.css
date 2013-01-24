@@ -1,0 +1,45 @@
+body {
+	margin-left: 3%;
+	margin-right: 3%;
+	font-size: 14px;
+}
+
+div.clear {
+	display: block;
+}
+
+h1 {
+	font-size: 36px;
+	font-family: '微软雅黑';
+	font-weight: bold;
+}
+
+th {
+	min-width: 60px;
+}
+
+div.table {
+	margin-left: 2%;
+}
+
+table.main {
+	text-align: center;
+	border-width: 1px;
+	border-spacing: 0;
+	border-style: outset;
+	border-collapse: collapse;
+	border-color: #7fff00;
+
+	/*background-color: #d3d3d3;*/
+}
+
+table.main td{
+	border-width: 1px;
+	border-style: inset;
+	background-color: white;
+	padding-bottom: 5px;
+	padding-top: 5px;
+	padding-left: 30px;
+	padding-right: 30px;
+}
+

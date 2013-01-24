@@ -1,0 +1,60 @@
+System:
+  Name: 'CB Plugin List'
+  Version: '0.1 Alpha'
+  InstallLock: 'install.lock'
+  InstallScript: 'website.install'
+
+MySQL:
+  Host: 'localhost'
+  User: 'root'
+  Pass: 'meiyoumima'
+  Database: 'test'
+  Charset: 'utf8'
+  Prefix: 'jl_'
+
+Template:
+  Compiled: '{?WEB_ROOT}/tmp/compiled/'
+  Cached: '{?WEB_ROOT}/tmp/cached/'
+  Template: '{?WEB_ROOT}/static/template/'
+
+Session:
+  # In minutes.
+  Expire: 60   
+  Prefix: aDx_ 
+
+Cookie:
+  # In minutes.
+  Expire: 60
+  Prefix: gFs_
+
+URI:
+  Rules:
+    -
+      Pattern: '/'
+      Backend: 'website.main'
+    -
+      Pattern: '/add'
+      Backend: 'website.add'
+    -
+      Pattern: '/static/(.+)'
+      Backend: 'Main.Resource'
+  Prefix: ''
+  Default: 'Main.NotMatched'
+  GZip:
+    Extensions:
+      - 'js'
+      - 'css'
+      - 'txt'
+      - 'htm'
+      - 'html'
+      - 'xml'
+    # Min size that enable gzip compression.
+    Size: 2048
+
+Lang:
+  Default: 'zh-CN'
+
+Runtime:
+  Require:
+  - '{?WEB_ROOT}/runtime/website.php'
+  - '{?WEB_ROOT}/runtime/rcon.class.php'
