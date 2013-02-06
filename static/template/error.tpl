@@ -22,7 +22,7 @@
 <div style="margin-top: 20px; color: #ff8c00; font-size: 12px;">
 	<p style="text-align: center;">
 		{{$config.System.Name}} {{$config.System.Version}}, CopyLeft @ WhiteGem Group <br />
-		Processed in {{(round(microtime(true) - $request.time, 6))}} ms, with {{round(memory_get_usage() / 1048576.0, 3)}} MB memory usage.
+		Processed in {{(round((microtime(true) - $request.time) * 1000, 6))}} ms, with {{round(memory_get_usage() / 1048576.0, 3)}} MB memory usage.
 	</p>
 </div>
 </body>

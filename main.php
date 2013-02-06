@@ -75,13 +75,30 @@ class Main {
 
 	public static function run($request) {
 		$conf = Config::getInstance();
-		if(! file_exists(WEB_ROOT . DS . $conf('System.InstallLock'))) {
-			$callable = explode('.', $conf('System.InstallScript'));
-			if(! is_callable($callable)) {
-				throw new CoreException('System is not installed, but install script is not callable!');
+		try {
+			if(! file_exists(WEB_ROOT . DS . $conf('System.InstallLock'))) {
+				$callable = explode('.', $conf('System.InstallScript'));
+				if(! is_callable($callable)) {
+					throw new CoreException('System is not installed, but install script is not callable!');
+				}
+				call_user_func_array($callable, array($request));
+				return ;
 			}
-			call_user_func_array($callable, array($request));
-			return ;
+		} catch (ConfigException $e) {
+		}
+		try {
+			$fwheader = $conf('System.Headers.FrameworkInfo');
+			if($fwheader) {
+				header('X-Powered-By: SimplePHPFramework');
+			}
+		} catch (ConfigException $e) {
+		}
+		try {
+			$sysheader = $conf('System.Headers.SystemInfo');
+			if($sysheader) {
+				header('X-System-Name: ' . $conf('System.Name'));
+			}
+		} catch (ConfigException $e) {
 		}
 		$rules = $conf('URI.Rules');
 		$prefix = $conf('URI.Prefix');
@@ -139,10 +156,87 @@ class Main {
 		return false;
 	}
 
+	private static function response($fulldata) {
+		$len = strlen($fulldata);
+		if(isset($_SERVER['HTTP_RANGE'])) {
+			$checkint = (function($str) {
+				return $str == strval(intval($str));
+			});
+			try{
+				list($_, $range) = explode('=', $_SERVER['HTTP_RANGE']);
+				list($range) = explode(',', $range);
+				$range = trim($range);
+				if(empty($range) || $range == '-') {
+					throw new Exception();
+				}
+				// Check range format, in RFC2616 14.35.1
+				// Try: FirstPos -
+				if(strpos($range, '-') == strlen($range) - 1) {
+					$startpos = substr($range, 0, -1);
+					if(! $checkint($startpos)) {
+						throw new Exception();
+					}
+					$startpos = intval($startpos);
+					if($startpos >= strlen($fulldata) || $startpos < 0) {
+						throw new Exception();
+					}
+					$lastpos = strlen($fulldata) - 1;
+					header('HTTP/1.1 206 Partial Content');
+					header("Content-Range: bytes $startpos-$lastpos/$len");
+					header('Content-Length: ' . $lastpos - $startpos + 1);
+					echo substr($fulldata, $startpos);
+					return ;
+				}
+				if(strpos($range, '-') === 0) {
+					$suffixLength = substr($range, 1);
+					if(!$checkint($suffixLength)) {
+						throw new Exception();
+					}
+					$suffixLength = intval($suffixLength);
+					if($suffixLength > $len || $suffixLength < 0) {
+						$suffixLength = $len;
+					}
+					$startpos = $len - $suffixLength;
+					$lastpos = $len - 1;
+					header('HTTP/1.1 206 Partial Content');
+					header("Content-Range: bytes $startpos-$lastpos/$len");
+					header('Content-Length: ' . $suffixLength);
+					echo substr($fulldata, -$suffixLength);
+					return ;
+				}
+				if(strpos($range, '-') === false || substr_count($range, '-') > 1) {
+					throw new Exception();
+				}
+				list($startpos, $endpos) = explode('-', $range, 2);
+				if(!($checkint($startpos) && $checkint($endpos))) {
+					throw new Exception();
+				}
+				$startpos = intval($startpos); $endpos = intval($endpos);
+				if($startpos < 0 || $startpos >= $len) {
+					throw new Exception();
+				}
+				$endpos = min($endpos, $len - 1);
+				header('HTTP/1.1 206 Partial Content');
+				header("Content-Range: bytes $startpos-$endpos/$len");
+				header('Content-Length: ' . $endpos - $startpos + 1);
+				echo substr($fulldata, $startpos, $endpos - $startpos + 1);
+			} catch (Exception $e) {
+				header('HTTP/1.1 416 Requested Range Not Satisfiable');
+				header('Content-Range: bytes */' . $len);
+				return ;
+			}
+		} else {
+			header('HTTP/1.1 200 OK');
+			header('Content-Length: ' . $len);
+			echo $fulldata;
+		}
+	}
+
 	public static function Resource($request) {
 		$path = WEB_ROOT . str_replace('/', DS, $request['uri']);
 		if(! (is_file($path) && is_readable($path))) {
 			header('HTTP/1.1 404 Not Found');
+			header('Content-Length: 0');
 			return ;
 		}
 		$mime_types = array(
@@ -209,8 +303,9 @@ class Main {
 				if(! self::startgzip()) throw new Exception();
 				header('Last-Modified: ' . date('r', $mtime));
 				header('Content-Type: ' . ( array_key_exists($ext, $mime_types) ? $mime_types[$ext] : 'application/octet-stream'));
-				header('Content-Length: ' . filesize($cachedPath));
-				echo file_get_contents($cachedPath);
+				//header('Content-Length: ' . filesize($cachedPath));
+				//echo file_get_contents($cachedPath);
+				self::response(file_get_contents($cachedPath));
 				return ;
 			}
 		} catch(ConfigException $e) {
@@ -219,7 +314,7 @@ class Main {
 		header('Last-Modified: ' . date('r', $mtime));
 		if(! ($f = fopen($path, 'rb'))) {
 			header('HTTP/1.1 403 Forbidden');
-			echo 'Permission Denied!';
+			header('Content-Length: 0');
 			return ;
 		}
 		$exts = array();
@@ -240,8 +335,9 @@ class Main {
 			$data = gzencode(fread($f, $fsize));
 		else
 			$data = fread($f, $fsize);
-		header('Content-Length: ' . strlen($data));
-		echo $data;
+		//header('Content-Length: ' . strlen($data));
+		//echo $data;
+		self::response($data);
 		flock($f, LOCK_UN);
 		fclose($f);
 		if(function_exists('fastcgi_finish_request')) fastcgi_finish_request();

@@ -20,7 +20,9 @@ class Cookie {
 
 	private function __construct() {
 		$conf = Config::getInstance();
-		$this -> expire = intval($conf('Cookie.Expire')) * 60;
+		$this -> expire = intval($conf('Cookie.Expire'));
+		if($this -> expire < 0) $this -> expire = 0;
+		else $this -> expire = time() + 60 * $this -> expire;
 		$this -> prefix = $conf('Cookie.Prefix');
 	}
 
@@ -31,8 +33,17 @@ class Cookie {
 		return NULL;
 	}
 
+	public function setExpire($expire) {
+		$expire = intval($expire);
+		if($expire < 0) $this -> expire = 0;
+		else $this -> expire = time() + 60 * $expire;
+	}
+
 	public function set($key, $value) {
-		setcookie($this -> prefix . $key, $value, time() + $this -> expire, '/');
+		if($value === NULL)
+			setcookie($this -> prefix . $key, false, time() - 86400, '/');
+		else
+			setcookie($this -> prefix . $key, $value, time() + $this -> expire, '/');
 	}
 
 	public function __get($key) {

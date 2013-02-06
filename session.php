@@ -23,12 +23,19 @@ class Session {
 		$this -> expire = intval($conf('Session.Expire'));
 		$this -> prefix = $conf('Session.Prefix');
 		$cookie = Cookie::getInstance();
+		if (is_callable('ini_set')) {
+			ini_set('session.use_cookies', '0');
+		}
 		if ($cookie('sid') !== NULL) {
 			session_id($cookie('sid'));
 		}
 		session_cache_expire($this -> expire);
 		session_start();
 		$cookie('sid', session_id());
+	}
+
+	public function reset() {
+		session_destroy();
 	}
 
 	public function get($key) {

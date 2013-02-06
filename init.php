@@ -12,8 +12,6 @@ $request = array(
 	'uri'       => $_SERVER['REQUEST_URI'],
 	'referer'   => isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '',
 	'time'      => microtime(true),
-	'get'       => $_GET,
-	'post'      => $_POST,
 );
 
 $qString = strpos($request['uri'], '?');
