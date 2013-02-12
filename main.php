@@ -26,12 +26,8 @@ class Main {
 	public static function loadRuntime() {
 		$conf = Config::getInstance();
 		$files = $conf('Runtime.Require');
-		try {
-			self::$recursive = $conf('Runtime.Recursive');
-		} catch(ConfigException $e) {
-		}
 		foreach($files as $file) {
-			if(DS !== '/') {
+			if(DS != '/') {
 				$file = str_replace('/', DS, $file);
 			}
 			self::loadDir($file);
@@ -40,21 +36,24 @@ class Main {
 	}
 
 	private static function loadDir($dir) {
-		$dir = str_replace('/', DS, $dir);
 		if( is_dir($dir)) {
-			if($dir[strlen($dir) - 1] != DS) {
-				$dir .= DS;
+			if(substr($dir, -1) == DS) $dir = substr($dir, 0, -1);
+			$handle = opendir($dir);
+			while(($fname = readdir($handle)) !== false){
+				if($fname[0] == '.') continue;
+				$fname = $dir . DS . $fname;
+				if(is_dir($fname)) {
+					//echo '[DIR] ' . $fname . '<br />';
+					self::loadDir($fname);
+					continue;
+				}
+				if(strlen($fname) < 5 || substr($fname, -4) != '.php') continue;
+				//echo $fname . '<br />';
+				require_once($fname);
 			}
-			$dir .= '*';
+			return ;
 		}
-		$result = glob($dir);
-		foreach($result as $file) {
-			if(is_file($file)) {
-				require_once($file);
-			} elseif(is_dir($file) && self::$recursive) {
-				self::loadDir($file . DS . '*');
-			}
-		}
+		if( is_file($dir) ) require_once($dir);
 	}
 
 	public static function getRequest() {

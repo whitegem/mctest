@@ -1,8 +1,8 @@
 System:
   Name: 'MCTest Regen'
   Version: '0.0.1 Alpha'
-  InstallLock: 'install.lock'
-  InstallScript: 'website.install'
+  #InstallLock: 'install.lock'
+  #InstallScript: 'website.install'
   Headers:
     FrameworkInfo: true
     SystemInfo: true
@@ -63,6 +63,5 @@ Lang:
   Default: 'zh-CN'
 
 Runtime:
-  Recursive: true
   Require:
-  - '{?WEB_ROOT}/runtime/'
+    - '{?WEB_ROOT}/runtime/'
