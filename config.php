@@ -1,9 +1,6 @@
 <?php
 
-if (! defined('IN_WGSL')) {
-	header('HTTP/1.1 404 Not Found');
-	die();
-}
+namespace Framework;
 
 class Config {
 
@@ -20,7 +17,7 @@ class Config {
 			// Performace NOTICE: spyc is 20 times slower than php_yaml PECL extension!
 			// Strongly suggested that you should install php_yaml extension!
 			require_once(WEB_ROOT . DS . 'lib' . DS . 'yaml.lib.php');
-			$this -> tree = Yaml::YAMLLoad(WEB_ROOT . DS . 'config.yml');
+			$this -> tree = \Yaml::YAMLLoad(WEB_ROOT . DS . 'config.yml');
 		}
 	}
 
@@ -103,7 +100,7 @@ class Config {
 	}
 }
 
-class ConfigException extends Exception{
+class ConfigException extends \Exception{
 }
 
 Main::initFramework(function(){$conf = Config::getInstance(); $conf -> init();});

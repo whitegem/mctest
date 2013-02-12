@@ -7,8 +7,8 @@ class User {
 	private $name = '';
 
 	private function __construct() {
-		$cookie = Cookie::getInstance();
-		$session = Session::getInstance();
+		$cookie = Framework\Cookie::getInstance();
+		$session = Framework\Session::getInstance();
 		if ($session -> login) {
 			$this -> uid = $session -> uid;
 			$this -> name = $session -> name;
@@ -20,7 +20,7 @@ class User {
 				return ;
 			}
 			$id = intval($cookie -> uid);
-			$mysql = MySQL::getInstance();
+			$mysql = Framework\MySQL::getInstance();
 			$dat = $mysql -> getRow('user', array('*'), 'uid=' . $id);
 			if($dat === null) return ;
 			$ak = $cookie -> login;
@@ -44,14 +44,14 @@ class User {
 
 	public function login($user, $pass, $rememberme = true) {
 		if($this -> uid !== -1) throw new UserException('error.alreadyLogin');
-		$mysql = MySQL::getInstance();
+		$mysql = Framework\MySQL::getInstance();
 		$user = $mysql -> escape($user);
 		$dat = $mysql -> getRow('user', array('*'), "name='$user'");
 		if($dat === null) throw new UserException('error.noUserFound');
 		$hashed = $dat['pass'];
 		if(Hashing::authPassword($pass, $hashed)) { // Login success.
-			$cookie = Cookie::getInstance();
-			$session = Session::getInstance();
+			$cookie = Framework\Cookie::getInstance();
+			$session = Framework\Session::getInstance();
 			$this -> uid = $dat['uid'];
 			$this -> name = $dat['name'];
 			list($ak, $sk) = Hashing::generateKeypair();
@@ -70,13 +70,17 @@ class User {
 		throw new UserException('error.LoginFailed');
 	}
 
+	public function register() {
+
+	}
+
 	public function logout() {
 		if($this -> uid === -1) throw new UserException('error.notLogin');
 		$this -> uid = -1;
 		$this -> name = '';
-		$session = Session::getInstance();
+		$session = Framework\Session::getInstance();
 		$session -> reset();
-		$cookie = Cookie::getInstance();
+		$cookie = Framework\Cookie::getInstance();
 		$cookie -> login = null;
 		$cookie -> uid = null;
 	}

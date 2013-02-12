@@ -1,9 +1,6 @@
 <?php
 
-if(! defined('IN_WGSL')) {
-	header('HTTP/1.1 404 Not Found');
-	die();
-}
+namespace Framework;
 
 require_once(WEB_ROOT . DS . 'Smarty' . DS . 'Smarty.class.php');
 
@@ -15,7 +12,7 @@ class Template {
 
 	public static function getInstance() {
 		if(self::$instance === NULL) {
-			self::$instance = new Smarty();
+			self::$instance = new \Smarty();
 			self::$instance -> left_delimiter = '{{';
 			self::$instance -> right_delimiter = '}}';
 			self::$instance -> debugging = false;
@@ -27,7 +24,7 @@ class Template {
 			self::$instance -> assign('lang', Language::getInstance() -> asArray());
 			self::$instance -> assign('session', Session::getInstance());
 			self::$instance -> assign('cookie', Cookie::getInstance());
-			Smarty::muteExpectedErrors();
+			\Smarty::muteExpectedErrors();
 		}
 		return self::$instance;
 	}

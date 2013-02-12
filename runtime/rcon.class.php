@@ -12,7 +12,7 @@ class RCon {
 	public function __construct($host, $port, $pass) {
 		$this -> socket = fsockopen($host, $port, $errno, $errstr, 2); // Timeout = 1 sec.
 		if(! $this -> socket) {
-			throw new RConException("Unable to establist a connection to [$host:$port].");
+			throw new RConException("Unable to establish a connection to [$host:$port].");
 		}
 		$this -> id = mt_rand(0, 2147483647); // Generate a random client ID.
 		$this -> Auth($pass);

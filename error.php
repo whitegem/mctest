@@ -1,9 +1,6 @@
 <?php
 
-if(! defined('IN_WGSL')) {
-	header('HTTP/1.1 404 Not Found');
-	die();
-}
+namespace Framework;
 
 class Error {
 
@@ -153,7 +150,7 @@ class Error {
 
 }
 
-set_error_handler(array('Error', 'handleError'));
-set_exception_handler(array('Error', 'handleException'));
-register_shutdown_function(array('Error', 'handleFatal'));
+set_error_handler(array('Framework\\Error', 'handleError'));
+set_exception_handler(array('Framework\\Error', 'handleException'));
+register_shutdown_function(array('Framework\\Error', 'handleFatal'));
 

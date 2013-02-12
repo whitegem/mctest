@@ -1,9 +1,6 @@
 <?php
 
-if(! defined('IN_WGSL')) {
-	header('HTTP/1.1 404 Not Found');
-	die();
-}
+namespace Framework;
 
 class Main {
 
@@ -11,6 +8,7 @@ class Main {
 	private static $framework = array();
 	private static $recursive = false;
 	private static $gzip = false;
+	private static $request = NULL;
 
 	public static function initFramework($callable = NULL) {
 		if($callable === NULL) {
@@ -59,6 +57,10 @@ class Main {
 		}
 	}
 
+	public static function getRequest() {
+		if(self::$request === NULL) throw new CoreException('Try to get request before run()!');
+	}
+
 	public static function initRuntime($callable = NULL) {
 		if($callable === NULL) {
 			foreach(self::$init as $loader) {
@@ -74,6 +76,7 @@ class Main {
 	}
 
 	public static function run($request) {
+		self::$request = $request;
 		$conf = Config::getInstance();
 		try {
 			if(! file_exists(WEB_ROOT . DS . $conf('System.InstallLock'))) {
@@ -167,18 +170,18 @@ class Main {
 				list($range) = explode(',', $range);
 				$range = trim($range);
 				if(empty($range) || $range == '-') {
-					throw new Exception();
+					throw new \Exception();
 				}
 				// Check range format, in RFC2616 14.35.1
 				// Try: FirstPos -
 				if(strpos($range, '-') == strlen($range) - 1) {
 					$startpos = substr($range, 0, -1);
 					if(! $checkint($startpos)) {
-						throw new Exception();
+						throw new \Exception();
 					}
 					$startpos = intval($startpos);
 					if($startpos >= strlen($fulldata) || $startpos < 0) {
-						throw new Exception();
+						throw new \Exception();
 					}
 					$lastpos = strlen($fulldata) - 1;
 					header('HTTP/1.1 206 Partial Content');
@@ -190,7 +193,7 @@ class Main {
 				if(strpos($range, '-') === 0) {
 					$suffixLength = substr($range, 1);
 					if(!$checkint($suffixLength)) {
-						throw new Exception();
+						throw new \Exception();
 					}
 					$suffixLength = intval($suffixLength);
 					if($suffixLength > $len || $suffixLength < 0) {
@@ -205,22 +208,22 @@ class Main {
 					return ;
 				}
 				if(strpos($range, '-') === false || substr_count($range, '-') > 1) {
-					throw new Exception();
+					throw new \Exception();
 				}
 				list($startpos, $endpos) = explode('-', $range, 2);
 				if(!($checkint($startpos) && $checkint($endpos))) {
-					throw new Exception();
+					throw new \Exception();
 				}
 				$startpos = intval($startpos); $endpos = intval($endpos);
 				if($startpos < 0 || $startpos >= $len) {
-					throw new Exception();
+					throw new \Exception();
 				}
 				$endpos = min($endpos, $len - 1);
 				header('HTTP/1.1 206 Partial Content');
 				header("Content-Range: bytes $startpos-$endpos/$len");
 				header('Content-Length: ' . $endpos - $startpos + 1);
 				echo substr($fulldata, $startpos, $endpos - $startpos + 1);
-			} catch (Exception $e) {
+			} catch (\Exception $e) {
 				header('HTTP/1.1 416 Requested Range Not Satisfiable');
 				header('Content-Range: bytes */' . $len);
 				return ;
@@ -299,8 +302,8 @@ class Main {
 			$cachedPath = substr($cache, 0, -1) . str_replace(WEB_ROOT . '/static', '', $path) . '.gz';
 			if(is_file($cachedPath) && is_readable($cachedPath)) {
 				$cctime = filectime($cachedPath);
-				if($cctime < $mtime) throw new Exception();
-				if(! self::startgzip()) throw new Exception();
+				if($cctime < $mtime) throw new \Exception();
+				if(! self::startgzip()) throw new \Exception();
 				header('Last-Modified: ' . date('r', $mtime));
 				header('Content-Type: ' . ( array_key_exists($ext, $mime_types) ? $mime_types[$ext] : 'application/octet-stream'));
 				//header('Content-Length: ' . filesize($cachedPath));
@@ -309,7 +312,7 @@ class Main {
 				return ;
 			}
 		} catch(ConfigException $e) {
-		} catch(Exception $e) {
+		} catch(\Exception $e) {
 		}
 		header('Last-Modified: ' . date('r', $mtime));
 		if(! ($f = fopen($path, 'rb'))) {
@@ -352,5 +355,5 @@ class Main {
 	}
 }
 
-class CoreException extends Exception{
+class CoreException extends \Exception{
 }

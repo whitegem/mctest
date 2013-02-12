@@ -1,9 +1,6 @@
 <?php
 
-if(! defined('IN_WGSL')) {
-	header('HTTP/1.1 404 Not Found');
-	die();
-}
+namespace Framework;
 
 class MySQL {
 
@@ -25,7 +22,7 @@ class MySQL {
 
 	private function __construct() {
 		$conf = Config::getInstance();
-		$this -> sql = @new mysqli($conf('MySQL.Host'), $conf('MySQL.User'), $conf('MySQL.Pass'), $conf('MySQL.Database'));
+		$this -> sql = @new \mysqli($conf('MySQL.Host'), $conf('MySQL.User'), $conf('MySQL.Pass'), $conf('MySQL.Database'));
 		if($this -> sql -> connect_errno) {
 			throw new MySQLException('Connect Failed with message: ' . $this -> sql -> connect_error);
 		}
@@ -146,5 +143,5 @@ class MySQL {
 	}
 }
 
-class MySQLException extends Exception{
+class MySQLException extends \Exception{
 }

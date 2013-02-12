@@ -1,2 +1,8 @@
-Common:
-  Name: 'MCTest Regen'
+common:
+  name: 'MCTest Regen'
+
+error:
+  alreadyLogin: '你已经登录了!'
+  noUserFound: '用户不存在!'
+  loginFailed: '登录失败!'
+  notLogin: '尚未登录!'

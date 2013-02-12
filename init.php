@@ -1,12 +1,6 @@
 <?php
 
-if(! defined('IN_WGSL')) {
-	header('HTTP/1.1 404 Not Found');
-	die();
-}
-
 error_reporting(0);
-
 
 $request = array(
 	'uri'       => $_SERVER['REQUEST_URI'],
@@ -31,6 +25,6 @@ require_once(WEB_ROOT . DS . 'session.php');
 require_once(WEB_ROOT . DS . 'cookie.php');
 require_once(WEB_ROOT . DS . 'lang.php');
 
-Main::initFramework();
-Main::loadRuntime();
-Main::initRuntime();
+Framework\Main::initFramework();
+Framework\Main::loadRuntime();
+Framework\Main::initRuntime();

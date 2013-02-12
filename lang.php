@@ -1,9 +1,6 @@
 <?php
 
-if (! defined('IN_WGSL')) {
-	header('HTTP/1.1 404 Not Found');
-	die();
-}
+namespace Framework;
 
 class Language {
 
@@ -27,7 +24,7 @@ class Language {
 			// Performace NOTICE: spyc is 20 times slower than php_yaml PECL extension!
 			// Strongly suggested that you should install php_yaml extension!
 			require_once(WEB_ROOT . DS . 'lib' . DS . 'yaml.lib.php');
-			$this -> tree = Yaml::YAMLLoad($langf);
+			$this -> tree = \Yaml::YAMLLoad($langf);
 		}
 		//$this -> parse($this -> tree);
 	}
@@ -146,7 +143,7 @@ class Language {
 	}
 }
 
-class LangException extends Exception{
+class LangException extends \Exception{
 }
 
 Main::initFramework(function(){$lang = Language::getInstance(); $lang -> init();});
